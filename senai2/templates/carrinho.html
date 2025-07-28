@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Carrinho - E-commerce Simples{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1><i class="fas fa-shopping-cart"></i> Meu Carrinho</h1>
+    
+    {% if carrinho %}
+        <div class="cart-container">
+            <div class="cart-items">
+                {% for item in carrinho %}
+                    <div class="cart-item">
+                        <div class="item-image">
+                            <img src="{{ url_for('static', filename='images/' + item.produto.imagem) }}" alt="{{ item.produto.nome }}" onerror="this.src='{{ url_for('static', filename='images/produto-default.jpg') }}'">
+                        </div>
+                        
+                        <div class="item-info">
+                            <h3>{{ item.produto.nome }}</h3>
+                            <p class="item-category">{{ item.produto.categoria }}</p>
+                            <p class="item-description">{{ item.produto.descricao[:80] }}{% if item.produto.descricao|length > 80 %}...{% endif %}</p>
+                        </div>
+                        
+                        <div class="item-quantity">
+                            <span class="quantity-label">Quantidade:</span>
+                            <span class="quantity-value">{{ item.quantidade }}</span>
+                        </div>
+                        
+                        <div class="item-price">
+                            <div class="unit-price">R$ {{ "%.2f"|format(item.produto.preco) }}</div>
+                            <div class="total-price">Total: R$ {{ "%.2f"|format(item.total) }}</div>
+                        </div>
+                        
+                        <div class="item-actions">
+                            <a href="{{ url_for('remover_carrinho', produto_id=item.produto.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Remover este item do carrinho?')">
+                                <i class="fas fa-trash"></i> Remover
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="cart-summary">
+                <div class="summary-card">
+                    <h3>Resumo do Pedido</h3>
+                    
+                    <div class="summary-line">
+                        <span>Subtotal:</span>
+                        <span>R$ {{ "%.2f"|format(total) }}</span>
+                    </div>
+                    
+                    <div class="summary-line">
+                        <span>Frete:</span>
+                        <span>Grátis</span>
+                    </div>
+                    
+                    <div class="summary-line summary-total">
+                        <span>Total:</span>
+                        <span>R$ {{ "%.2f"|format(total) }}</span>
+                    </div>
+                    
+                    {% if session.usuario_id %}
+                        <form method="POST" action="{{ url_for('finalizar_pedido') }}" style="display: inline;">
+                            <button type="submit" class="btn btn-success btn-full">
+                                <i class="fas fa-credit-card"></i> Finalizar Pedido
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="login-required">
+                            <p>Para finalizar o pedido, você precisa estar logado.</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary btn-full">
+                                <i class="fas fa-sign-in-alt"></i> Fazer Login
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-cart">
+            <i class="fas fa-shopping-cart"></i>
+            <h3>Seu carrinho está vazio</h3>
+            <p>Adicione alguns produtos para continuar comprando.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Continuar Comprando
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Atualização automática do total do carrinho
+function atualizarTotal() {
+    const items = document.querySelectorAll('.cart-item');
+    let total = 0;
+    
+    items.forEach(item => {
+        const preco = parseFloat(item.querySelector('.item-price').textContent.replace('R$ ', '').replace(',', '.'));
+        const quantidade = parseInt(item.querySelector('.item-quantity').textContent);
+        total += preco * quantidade;
+    });
+    
+    const totalElement = document.querySelector('.cart-total h3');
+    if (totalElement) {
+        totalElement.textContent = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
+    }
+}
+
+// Executar ao carregar a página
+document.addEventListener('DOMContentLoaded', atualizarTotal);
+</script>
+{% endblock %}

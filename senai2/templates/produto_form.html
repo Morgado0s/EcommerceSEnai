@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}{% if produto %}Editar{% else %}Novo{% endif %} Produto - E-commerce Simples{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-header">
+        <h1>
+            <i class="fas fa-{% if produto %}edit{% else %}plus{% endif %}"></i>
+            {% if produto %}Editar Produto{% else %}Novo Produto{% endif %}
+        </h1>
+        <a href="{{ url_for('admin') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+    
+    <div class="form-container">
+        <form method="POST" class="product-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nome">Nome do Produto:</label>
+                    <input type="text" id="nome" name="nome" required class="form-input" value="{{ produto.nome if produto else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="categoria">Categoria:</label>
+                    <input type="text" id="categoria" name="categoria" required class="form-input" value="{{ produto.categoria if produto else '' }}" list="categorias">
+                    <datalist id="categorias">
+                        <option value="Eletrônicos">
+                        <option value="Roupas">
+                        <option value="Calçados">
+                        <option value="Livros">
+                        <option value="Casa e Jardim">
+                        <option value="Esportes">
+                        <option value="Beleza">
+                        <option value="Brinquedos">
+                    </datalist>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="preco">Preço (R$):</label>
+                    <input type="number" id="preco" name="preco" step="0.01" min="0" required class="form-input" value="{{ produto.preco if produto else '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="imagem">Imagem do Produto:</label>
+                    <div class="image-upload-container">
+                        <input type="file" id="file-upload" accept=".png,.jpg,.jpeg,.gif,.webp" style="display: none;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('file-upload').click()">
+                            <i class="fas fa-upload"></i> Fazer Upload
+                        </button>
+                        <span id="upload-status"></span>
+                    </div>
+                    <input type="text" id="imagem" name="imagem" class="form-input" value="{{ produto.imagem if produto else 'produto-default.jpg' }}" placeholder="produto-default.jpg" readonly>
+                    <small class="form-help">Ou use uma imagem já existente na pasta static/images/</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="descricao">Descrição:</label>
+                <textarea id="descricao" name="descricao" rows="4" class="form-textarea" placeholder="Descreva o produto...">{{ produto.descricao if produto else '' }}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> {% if produto %}Atualizar{% else %}Criar{% endif %} Produto
+                </button>
+                
+                <a href="{{ url_for('admin') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+        
+        {% if produto %}
+            <div class="product-preview">
+                <h3>Preview do Produto</h3>
+                <div class="preview-card">
+                    <img src="{{ url_for('static', filename='images/' + produto.imagem) }}" alt="{{ produto.nome }}" class="preview-image" onerror="this.src='{{ url_for('static', filename='images/produto-default.jpg') }}'">
+                    <div class="preview-info">
+                        <h4>{{ produto.nome }}</h4>
+                        <p class="preview-category">{{ produto.categoria }}</p>
+                        <p class="preview-price">R$ {{ "%.2f"|format(produto.preco) }}</p>
+                        <p class="preview-description">{{ produto.descricao }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Preview em tempo real para novos produtos
+if (!{{ 'true' if produto else 'false' }}) {
+    const form = document.querySelector('.product-form');
+    const container = document.querySelector('.form-container');
+    
+    // Criar preview dinâmico
+    const previewHTML = `
+        <div class="product-preview" id="live-preview" style="display: none;">
+            <h3>Preview do Produto</h3>
+            <div class="preview-card">
+                <img src="" alt="" class="preview-image" id="preview-img">
+                <div class="preview-info">
+                    <h4 id="preview-nome">Nome do Produto</h4>
+                    <p class="preview-category" id="preview-categoria">Categoria</p>
+                    <p class="preview-price" id="preview-preco">R$ 0,00</p>
+                    <p class="preview-description" id="preview-descricao">Descrição</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', previewHTML);
+    
+    // Atualizar preview em tempo real
+    function updatePreview() {
+        const nome = document.getElementById('nome').value;
+        const categoria = document.getElementById('categoria').value;
+        const preco = document.getElementById('preco').value;
+        const imagem = document.getElementById('imagem').value;
+        const descricao = document.getElementById('descricao').value;
+        
+        if (nome || categoria || preco || descricao) {
+            document.getElementById('live-preview').style.display = 'block';
+            document.getElementById('preview-nome').textContent = nome || 'Nome do Produto';
+            document.getElementById('preview-categoria').textContent = categoria || 'Categoria';
+            document.getElementById('preview-preco').textContent = preco ? `R$ ${parseFloat(preco).toFixed(2)}` : 'R$ 0,00';
+            document.getElementById('preview-descricao').textContent = descricao || 'Descrição';
+            
+            const imgElement = document.getElementById('preview-img');
+            if (imagem) {
+                imgElement.src = `/static/images/${imagem}`;
+                imgElement.onerror = function() {
+                    this.src = '/static/images/produto-default.jpg';
+                };
+            } else {
+                imgElement.src = '/static/images/produto-default.jpg';
+            }
+        } else {
+            document.getElementById('live-preview').style.display = 'none';
+        }
+    }
+    
+    // Adicionar listeners
+    ['nome', 'categoria', 'preco', 'imagem', 'descricao'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePreview);
+    });
+}
+
+// Funcionalidade de upload de imagem
+document.getElementById('file-upload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const uploadStatus = document.getElementById('upload-status');
+    uploadStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fazendo upload...';
+    uploadStatus.style.color = '#007bff';
+    
+    fetch('/upload_imagem', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('imagem').value = data.filename;
+            uploadStatus.innerHTML = '<i class="fas fa-check"></i> Upload realizado com sucesso!';
+            uploadStatus.style.color = '#28a745';
+            
+            // Atualizar preview se existir
+            if (typeof updatePreview === 'function') {
+                updatePreview();
+            }
+            
+            // Limpar status após 3 segundos
+            setTimeout(() => {
+                uploadStatus.innerHTML = '';
+            }, 3000);
+        } else {
+            uploadStatus.innerHTML = '<i class="fas fa-times"></i> ' + data.message;
+            uploadStatus.style.color = '#dc3545';
+        }
+    })
+    .catch(error => {
+        uploadStatus.innerHTML = '<i class="fas fa-times"></i> Erro no upload';
+        uploadStatus.style.color = '#dc3545';
+        console.error('Erro:', error);
+    });
+});
+
+// Permitir edição manual do campo imagem
+document.getElementById('imagem').addEventListener('dblclick', function() {
+    this.readOnly = false;
+    this.focus();
+});
+
+document.getElementById('imagem').addEventListener('blur', function() {
+    this.readOnly = true;
+});
+
+document.getElementById('imagem').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        this.blur();
+    }
+});
+</script>
+{% endblock %}

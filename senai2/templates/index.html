@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos - E-commerce Simples{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Nossos Produtos</h1>
+    
+    <!-- Filtros -->
+    <div class="filters">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="busca" placeholder="Buscar produtos..." value="{{ request.args.get('busca', '') }}" class="search-input">
+                
+                <select name="categoria" class="category-select">
+                    <option value="">Todas as categorias</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria }}" {% if request.args.get('categoria') == categoria %}selected{% endif %}>
+                            {{ categoria }}
+                        </option>
+                    {% endfor %}
+                </select>
+                
+                <button type="submit" class="filter-btn">
+                    <i class="fas fa-search"></i> Filtrar
+                </button>
+                
+                <a href="{{ url_for('index') }}" class="clear-btn">
+                    <i class="fas fa-times"></i> Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Lista de Produtos -->
+    <div class="products-grid">
+        {% if produtos %}
+            {% for produto in produtos %}
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="{{ url_for('static', filename='images/' + produto.imagem) }}" alt="{{ produto.nome }}" onerror="this.src='{{ url_for('static', filename='images/produto-default.jpg') }}'">
+                    </div>
+                    
+                    <div class="product-info">
+                        <h3 class="product-name">{{ produto.nome }}</h3>
+                        <p class="product-category">{{ produto.categoria }}</p>
+                        <p class="product-description">{{ produto.descricao[:100] }}{% if produto.descricao|length > 100 %}...{% endif %}</p>
+                        <div class="product-price">R$ {{ "%.2f"|format(produto.preco) }}</div>
+                        
+                        <div class="product-actions">
+                            <a href="{{ url_for('adicionar_carrinho', produto_id=produto.id) }}" class="btn btn-primary">
+                                <i class="fas fa-cart-plus"></i> Adicionar ao Carrinho
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-products">
+                <i class="fas fa-box-open"></i>
+                <h3>Nenhum produto encontrado</h3>
+                <p>Tente ajustar os filtros ou volte mais tarde.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

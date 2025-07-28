@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Área Administrativa - E-commerce Simples{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-header">
+        <h1><i class="fas fa-cogs"></i> Área Administrativa</h1>
+        <a href="{{ url_for('novo_produto') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Novo Produto
+        </a>
+    </div>
+    
+    <div class="admin-stats">
+        <div class="stat-card">
+            <i class="fas fa-box"></i>
+            <div class="stat-info">
+                <h3>{{ produtos|length }}</h3>
+                <p>Produtos Cadastrados</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <i class="fas fa-users"></i>
+            <div class="stat-info">
+                <h3>{{ usuarios }}</h3>
+                <p>Usuários Registrados</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <i class="fas fa-shopping-bag"></i>
+            <div class="stat-info">
+                <h3>{{ pedidos }}</h3>
+                <p>Pedidos Realizados</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-section">
+        <h2>Gerenciar Produtos</h2>
+        
+        {% if produtos %}
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Imagem</th>
+                            <th>Nome</th>
+                            <th>Categoria</th>
+                            <th>Preço</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in produtos %}
+                            <tr>
+                                <td>{{ produto.id }}</td>
+                                <td>
+                                    <img src="{{ url_for('static', filename='images/' + produto.imagem) }}" alt="{{ produto.nome }}" class="admin-product-image" onerror="this.src='{{ url_for('static', filename='images/produto-default.jpg') }}'">
+                                </td>
+                                <td>{{ produto.nome }}</td>
+                                <td>{{ produto.categoria }}</td>
+                                <td>R$ {{ "%.2f"|format(produto.preco) }}</td>
+                                <td>{{ produto.data_criacao.strftime('%d/%m/%Y') }}</td>
+                                <td class="admin-actions">
+                                    <a href="{{ url_for('editar_produto', produto_id=produto.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('deletar_produto', produto_id=produto.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja deletar este produto?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="no-products">
+                <i class="fas fa-box-open"></i>
+                <h3>Nenhum produto cadastrado</h3>
+                <p>Comece adicionando seu primeiro produto.</p>
+                <a href="{{ url_for('novo_produto') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Adicionar Produto
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
